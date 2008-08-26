@@ -2,6 +2,7 @@
 """
 
 from zope.interface import implements, directlyProvides
+from zope.component import getUtility 
 
 from Products.Archetypes import atapi
 from Products.ATContentTypes.content import base
@@ -12,6 +13,7 @@ from slc.dbtableedit.interfaces import IDBTable
 from slc.dbtableedit.config import PROJECTNAME
 from AccessControl import ClassSecurityInfo
 
+from collective.lead.interfaces import IDatabase
 import sqlalchemy as sa
 
 DBTableSchema = schemata.ATContentTypeSchema.copy() + atapi.Schema((
@@ -39,6 +41,7 @@ DBTableSchema = schemata.ATContentTypeSchema.copy() + atapi.Schema((
             description_msgid='PloneDBTableEdit_help_DBConnection',
             i18n_domain='PloneDBTableEdit',
         ),
+        required=True,
         schemata="config DB",
     ),
 
@@ -51,6 +54,7 @@ DBTableSchema = schemata.ATContentTypeSchema.copy() + atapi.Schema((
             description_msgid='PloneDBTableEdit_help_table',
             i18n_domain='PloneDBTableEdit',
         ),
+        required=True,
         schemata="config DB"
     ),
 
@@ -76,6 +80,7 @@ DBTableSchema = schemata.ATContentTypeSchema.copy() + atapi.Schema((
             description_msgid='PloneDBTableEdit_help_primaryKey',
             i18n_domain='PloneDBTableEdit',
         ),
+        required = True,
         schemata="config DB"
     ),
 
@@ -125,6 +130,7 @@ DBTableSchema = schemata.ATContentTypeSchema.copy() + atapi.Schema((
             description_msgid='PloneDBTableEdit_help_sortByColumn',
             i18n_domain='PloneDBTableEdit',
         ),
+        required=True,
         schemata="config DB"
     ),
 
@@ -283,147 +289,122 @@ class DBTable(base.ATCTContent):
 
     security = ClassSecurityInfo()
     
-    
-    security.declarePublic('selectFromTable')
-    def selectFromTable(self, where='', order=''):
+    def _get_conn(self):
+        conn = {}
+        db = getUtility(IDatabase, name=self.getDBConnection())
+        connection = db.connection 
+        meta = sa.MetaData()
+        meta.bind = connection
+        conn['conn'] = connection
+        conn['main'] = sa.Table(self.getTable(), meta, autoload=True)
+        if self.getLeft_table():
+            conn['left'] = sa.Table(self.getLeft_table(), meta, autoload=True)
+        if self.getRight_table():
+            conn['right'] = sa.Table(self.getRight_table(), meta, autoload=True)
+        return conn
+        
+    security.declareProtected('Modify portal content','selectFromTable')
+    def selectFromTable(self, order=''):
         """
         Select dynamically from table
         """
-        C = getattr(self, self.getDBConnection())
-        if C is None:
-            return
-        SQL = "SELECT * FROM %s" % (self.getTable())
-        if not where:
-            where = self.REQUEST.get('where', '')
-        if where.strip() != "":
-            # Do we have an explicit where condition?
-            SQL += " WHERE %s" % where
+        C = self._get_conn()
+        conn = C['conn']
+        maintable = C['main']
+        sortcolumn = getattr(maintable.c, self.getSortByColumn())
 
+        statement = sa.sql.select([maintable])
+        statement = statement.order_by(sortcolumn) 
 
-        if order.strip() != '':
-            SQL += " ORDER BY %s" % order
-        elif self.getSortByColumn():
-            SQL += " ORDER BY %s" % self.getSortByColumn()
-
-        SQL +=";"
-        #print SQL
-        results = C().query(SQL)
-        results = Results(results)
+        results = conn.execute(statement).fetchall() 
+        
         return results
 
-    security.declarePublic('insertIntoTable')
+    security.declareProtected('Modify portal content', 'insertIntoTable')
     def insertIntoTable(self):
         """
         Inserts into table whatever is given in the request and matches the table colum names
         """
-        C = getattr(self, self.getDBConnection())
-        quote = C.sql_quote__
-        SQL = "SELECT * FROM %s LIMIT 1;" % (self.getTable())
-        results = C().query(SQL)
-        results = Results(results)
-        names = results.names()
-        toset = {}
         R = self.REQUEST
-        for n in names:
-            if R.has_key('db_'+n):
-                toset[n] = R['db_'+n]
+        C = self._get_conn()
+        conn = C['conn']
+        maintable = C['main']
 
-        columns = toset.keys()
-        vals = []
-        coldata = self.getColumnData()
-        for k in columns:
-            if coldata[k]['type']=='s':
-                val = quote(toset[k])
-            else:
-                val = toset[k]
-            vals.append(val)
-        SQL = "INSERT INTO %s (%s) VALUES (%s)" % (self.getTable(), ", ".join(columns), ", ".join(vals))
-        #print SQL
-        results = C().query(SQL)
-        #print results
-        return "Record added."
 
-    security.declarePublic('deleteFromTable')
+        toset = {}
+        for c in maintable.columns:
+            if R.has_key('db_%s' % c.name):
+                toset[c.name] = R['db_%s'%c.name]
+        
+        columns = toset.keys()        
+        ins = maintable.insert(toset)
+        
+        result = conn.execute(ins)
+        id = result.last_inserted_ids()
+        
+        return "Record added. ID: %s" % id
+
+    security.declareProtected('Modify portal content', 'deleteFromTable')
     def deleteFromTable(self):
         """
         deletes the selected record from the database.
         """
-        C = getattr(self, self.getDBConnection())
-        quote = C.sql_quote__
+        C = self._get_conn()
+        conn = C['conn']
+        maintable = C['main']
+        pkey = getattr(maintable.c, self.getPrimaryKey())
+
         IDS = self.REQUEST.get('IDS', [])
 
         if type(IDS) == type(''):
             IDS = [IDS]
 
-
-        coldata = self.getColumnData()
-        for ID in IDS:
-            if coldata[self.getPrimaryKey()]['type']=='s':
-                qID = quote(ID)
-            else:
-                qID = ID
-            SQL = "DELETE FROM %s WHERE %s=%s;" % (self.getTable(), self.getPrimaryKey(), qID)
-            #print SQL
-            results = C().query(SQL)
+        delete = maintable.delete(pkey=IDS)
+        
+        result = conn.execute(delete)
+        
         return "The following records have been deleted: %s." % IDS
 
-    security.declarePublic('updateTable')
+
+    security.declareProtected('Modify portal content','updateTable')
     def updateTable(self):
         """
         updates the given entry
         """
-        C = getattr(self, self.getDBConnection())
-        quote = C.sql_quote__
-        IDS = self.REQUEST.get('IDS', [])
+        R = self.REQUEST
+        C = self._get_conn()
+        conn = C['conn']
+        maintable = C['main']
+        pkey = getattr(maintable.c, self.getPrimaryKey())
+
+        IDS = R.get('IDS', [])
         if type(IDS) == type(''):
             IDS = [IDS]
         ID = IDS[0]
 
-        SQL = "SELECT * FROM %s LIMIT 1;" % (self.getTable())
-        results = C().query(SQL)
-        results = Results(results)
-        names = results.names()
         toset = {}
-        R = self.REQUEST
-        coldata = self.getColumnData()
-
-        for n in names:
-            if R.has_key('db_'+n):
-                toset[n] = R['db_'+n]
-        vals = []
-        for I in toset.items():
-            if coldata[i[0]]['type']=='s':
-                I[1] = quote(I[1])
-            vals.append("=".join(I))
-        if coldata[self.getPrimaryKey()]['type']=='s':
-            qID = quote(ID)
-        else:
-            qID = ID
-        SQL = "UPDATE %s SET %s WHERE %s=%s;" % (self.getTable(), ", ".join(vals), self.getPrimaryKey(), qID)
-        #print SQL
-        results = C().query(SQL)
+        for c in maintable.columns:
+            if R.has_key('db_%s' % c.name):
+                toset[c.name] = R['db_%s'%c.name]
+        
+        upd = maintable.update(pkey==ID, values=toset)
+        conn.execute(upd)
         return "Record %s has been updated" % ID
 
-    security.declarePublic('getNextPKValue')
+    security.declareProtected('Modify portal content','getNextPKValue')
     def getNextPKValue(self):
+        """ Selects the max from the primary key column and increments by one
         """
-        <p>Selects the max from the primary key column and increments by
-        one.</p>
-        """
-        try:
-            C = getattr(self, self.getDBConnection())
-            SQL = "SELECT max(%s) FROM %s;" % (self.getPrimaryKey(), self.getTable())
-            results = C().query(SQL)
-            maxkey = results[1][0][0]
-            if type(maxkey) == type(3):
-                nextkey = maxkey +1
-            else:
-                nextkey = 1
-            return nextkey
-        except:
-            return 1
-
-    security.declarePublic('getForeignKeyList')
+        C = self._get_conn()
+        conn = C['conn']
+        maintable = C['main']
+        pkey = getattr(maintable.c, self.getPrimaryKey())
+        statement = sa.sql.select([sa.sql.func.max(pkey).label('maxkey')])
+        result = conn.execute(statement)
+        maxkey = result.fetchone()['maxkey']+1
+        return maxkey
+        
+    security.declareProtected('Modify portal content','getForeignKeyList')
     def getForeignKeyList(self, column):
         """
         retrieves a value list as specified in the property configureForeignKeys to be used in the inplace editor
