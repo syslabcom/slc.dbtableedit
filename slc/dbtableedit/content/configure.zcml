@@ -1,0 +1,23 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:five="http://namespaces.zope.org/five"
+    i18n_domain="slc.dbtableedit">
+
+    <!-- configure your content components here -->
+
+    <!-- -*- extra stuff goes here -*- -->
+    <class class=".dbtable.DBTable">
+
+        <require
+            permission="zope2.View"
+            interface="..interfaces.IDBTable"
+            />
+
+        <require
+            permission="cmf.ModifyPortalContent"
+            set_schema="..interfaces.IDBTable"
+            />
+
+    </class>
+
+</configure>
