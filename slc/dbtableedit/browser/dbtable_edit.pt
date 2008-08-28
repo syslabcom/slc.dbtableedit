@@ -105,7 +105,9 @@
                   <span tal:condition="FKL">
                       <select tal:attributes="name string:filter_${H/name};tabindex tabindex/next;">
                         <option value=""></option>
-                        <option tal:repeat="K FKL" tal:content="K" tal:attributes="value K"></option>
+                        <option tal:repeat="K FKL" tal:content="K" 
+                                tal:attributes="value K;
+                                selected python:not request.get('form.button.RemoveFilter') and request.get('filter_%s' % H.name, '')==K"></option>
                       </select>
                   </span>
               </td>
