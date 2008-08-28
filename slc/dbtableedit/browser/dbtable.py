@@ -18,9 +18,12 @@ class DBTableEditView(BrowserView):
     """Default edit of a DBTable
     """
     
-    __call__ = ViewPageTemplateFile('dbtable_edit.pt')
-    
-    inplace_editor = ViewPageTemplateFile('inplace_editor.pt')
+    template = ViewPageTemplateFile('dbtable_edit.pt')
+    template.id = '@@enter'
+
+    def __call__(self):
+        return self.template()
+        
     
     def make_inplace_editor(self, id, col, fkl=None):
         """ generate the code for an in place editor """
