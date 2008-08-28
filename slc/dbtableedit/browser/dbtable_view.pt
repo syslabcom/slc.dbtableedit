@@ -1,0 +1,87 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal" 
+      xmlns:metal="http://xml.zope.org/namespaces/metal" 
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n" 
+      xml:lang="en"
+      lang="en"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="slc.dbtableedit">
+
+
+
+<body>
+<metal:css fill-slot="css_slot">
+    <style type="text/css" media="all"
+           tal:content="string:@import url($portal_url/++resource++dbtable-styledefs.css);"></style>
+</metal:css>
+
+<div metal:fill-slot="main"
+     tal:define="Batch python:modules['Products.CMFPlone'].Batch;
+                 b_size here/getDefault_batch_size ;b_start python:0;b_start request/b_start | b_start;
+        ">
+
+        <div tal:replace="structure provider:plone.abovecontenttitle" />
+
+        <h1 class="documentFirstHeading">
+            <span metal:use-macro="python:context.widget('title', mode='view')" />
+        </h1>
+
+        <div tal:replace="structure provider:plone.belowcontenttitle" />
+
+        <div class="documentDescription">
+            <span metal:use-macro="python:context.widget('description', mode='view')" />
+        </div>
+        
+
+
+
+<div tal:define="results python:here.selectFromTable();
+                 batch python:Batch(results, b_size, int(b_start), orphan=1);">
+
+<div metal:use-macro="here/batch_macros/macros/navigation" />
+
+    <div id="tablescroller" style="overflow: scroll;">
+    <table border="0" cellspacing="0" class="selecttable"        
+           tal:define="columns python:here.getColumnsOfTable('main');
+                       showPK here/getShowPrimaryKey;
+                       pkey here/getPrimaryKey">
+        <tr>
+            <tal:repeat repeat="H columns">
+                <th tal:define="hide python:not showPK and H.name==pkey"
+                    tal:content="python:H.name.capitalize()"
+                    tal:condition="python:not(not showPK and H.name==pkey)">
+                    Headers
+                </th>                
+            </tal:repeat>
+        </tr>
+
+        <tr tal:repeat="line batch">
+          <span tal:define="odd repeat/line/odd;">
+
+            <span tal:omit-tag="" tal:repeat="C python:columns.keys()">
+              <td tal:define="currid python:line[pkey];"
+                  xtal:attributes="class python:odd and 'cellNormal' or 'cellHighlighted';"
+                  tal:condition="python:not(not showPK and C==pkey)">
+
+                  <span id="editme"
+                        tal:content="python:line[C]"
+                        tal:attributes="id python:'edit_%s_%s'%(currid, columns[C])">Value</span>
+
+              </td>
+            </span>
+          </span>
+        </tr>
+
+    </table>
+    </div>
+</div>
+
+
+
+
+
+
+</div>
+
+</body>
+</html>

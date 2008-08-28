@@ -1,6 +1,6 @@
 """Definition of the DBTable content type
 """
-
+from types import *
 from zope.interface import implements, directlyProvides
 from zope.component import getUtility 
 
@@ -13,261 +13,14 @@ from slc.dbtableedit.interfaces import IDBTable
 from slc.dbtableedit.config import PROJECTNAME
 from AccessControl import ClassSecurityInfo
 
+from plone.memoize import instance
+
+from schema import DBTableSchema
+
 from collective.lead.interfaces import IDatabase
 import sqlalchemy as sa
 
-DBTableSchema = schemata.ATContentTypeSchema.copy() + atapi.Schema((
 
-    atapi.TextField(
-        name='description',
-        widget=atapi.TextAreaWidget(
-            label="Description",
-            description="A description for this table. It will show up in the table view.",
-            label_msgid='PloneDBTableEdit_label_description',
-            description_msgid='PloneDBTableEdit_help_description',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="default"
-    ),
-
-    atapi.StringField(
-        name='DBConnection',
-        default='',
-        widget=atapi.StringWidget
-        (
-            label="Database Connection",
-            description="Choose a database connection to use",
-            label_msgid='PloneDBTableEdit_label_DBConnection',
-            description_msgid='PloneDBTableEdit_help_DBConnection',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        required=True,
-        schemata="config DB",
-    ),
-
-    atapi.StringField(
-        name='table',
-        widget=atapi.StringWidget(
-            label="Tablename",
-            description="The name of the table inside your database that should be used for editing and displaying.",
-            label_msgid='PloneDBTableEdit_label_table',
-            description_msgid='PloneDBTableEdit_help_table',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        required=True,
-        schemata="config DB"
-    ),
-
-    atapi.IntegerField(
-        name='default_batch_size',
-        default="10",
-        widget=atapi.IntegerWidget(
-            label="Default batch size",
-            description="The number of lines displayed by default at once. Use 0 for no batching.",
-            label_msgid='PloneDBTableEdit_label_default_batch_size',
-            description_msgid='PloneDBTableEdit_help_default_batch_size',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='primaryKey',
-        widget=atapi.StringWidget(
-            label="Primay Key",
-            description="The column in the table used as primary key.",
-            label_msgid='PloneDBTableEdit_label_primaryKey',
-            description_msgid='PloneDBTableEdit_help_primaryKey',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        required = True,
-        schemata="config DB"
-    ),
-
-    atapi.BooleanField(
-        name='autoIncrementPrimaryKey',
-        widget=atapi.BooleanWidget(
-            label="Autoincrement Primary Key?",
-            description="If your Primary Key is an integer, you can choose to have it incremented automatically when a new record is added. Note that this works only with integer keys. If you have string keys or even multiple keys, you need to enter them manually.",
-            label_msgid='PloneDBTableEdit_label_autoIncrementPrimaryKey',
-            description_msgid='PloneDBTableEdit_help_autoIncrementPrimaryKey',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.BooleanField(
-        name='showPrimaryKey',
-        default=1,
-        widget=atapi.BooleanWidget(
-            label="Show Primary Key field?",
-            description="If selected, the primary key field will not be displayed in view or edit templates. This makes usually only sense in conjunction with Autoincrement Primary Key set to true.",
-            label_msgid='PloneDBTableEdit_label_showPrimaryKey',
-            description_msgid='PloneDBTableEdit_help_showPrimaryKey',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.LinesField(
-        name='configureForeignKeys',
-        widget=atapi.LinesWidget(
-            label="Configure Foreign Keys",
-            description="Format is: field | select statement to retrieve the list<br>Use this to display a selection list instead of a text input field when editing the cell. The SQL statement must return a valid list of values from another table in your database. Example: CountryCode FROM Countries.",
-            label_msgid='PloneDBTableEdit_label_configureForeignKeys',
-            description_msgid='PloneDBTableEdit_help_configureForeignKeys',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='sortByColumn',
-        widget=atapi.StringWidget(
-            label="Sorting column",
-            description="Specify a column which should be used for sorting. You can specify ASC or DESC as a sorting direction after the column name.",
-            label_msgid='PloneDBTableEdit_label_sortByColumn',
-            description_msgid='PloneDBTableEdit_help_sortByColumn',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        required=True,
-        schemata="config DB"
-    ),
-
-    atapi.BooleanField(
-        name='is_nm_table',
-        widget=atapi.BooleanWidget(
-            label="Is this an n-m table?",
-            description="If this is an n-m mapping table, you can use the assign form to populate it. To make this work you need to fill in the following configuration fields also.",
-            label_msgid='PloneDBTableEdit_label_is_nm_table',
-            description_msgid='PloneDBTableEdit_help_is_nm_table',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='left_table',
-        widget=atapi.StringWidget(
-            label="Left table name",
-            description="Fill in the name of the left table that should be used to populate the n-m table",
-            label_msgid='PloneDBTableEdit_label_left_table',
-            description_msgid='PloneDBTableEdit_help_left_table',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='left_table_pkey',
-        widget=atapi.StringWidget(
-            label="Primary key of the left table",
-            description="Fill in the name of the primary key column of the left table",
-            label_msgid='PloneDBTableEdit_label_left_table_pkey',
-            description_msgid='PloneDBTableEdit_help_left_table_pkey',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='left_table_display_cols',
-        widget=atapi.StringWidget(
-            label="Columns to display for the left table",
-            description="Name the columns that should be used to display the records in the unser interface.",
-            label_msgid='PloneDBTableEdit_label_left_table_display_cols',
-            description_msgid='PloneDBTableEdit_help_left_table_display_cols',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='leftForeignKey',
-        widget=atapi.StringWidget(
-            label="Left Foreign Key",
-            description="Name the column of this table that contains the foreign key to the left table",
-            label_msgid='PloneDBTableEdit_label_leftForeignKey',
-            description_msgid='PloneDBTableEdit_help_leftForeignKey',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='left_table_sorting_col',
-        widget=atapi.StringWidget(
-            label="Left table sorting column",
-            description="If you want sortable support for this table, specify a numeric column from this table which will be used for storing the order",
-            label_msgid='PloneDBTableEdit_label_left_table_sorting_col',
-            description_msgid='PloneDBTableEdit_help_left_table_sorting_col',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='right_table',
-        widget=atapi.StringWidget(
-            label="Right table name",
-            description="Fill in the name of the right table that should be used to populate the n-m table",
-            label_msgid='PloneDBTableEdit_label_right_table',
-            description_msgid='PloneDBTableEdit_help_right_table',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='right_table_pkey',
-        widget=atapi.StringWidget(
-            label="Primary key of the right table",
-            description="Fill in the name of the primary key column of the right table",
-            label_msgid='PloneDBTableEdit_label_right_table_pkey',
-            description_msgid='PloneDBTableEdit_help_right_table_pkey',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='right_table_display_cols',
-        widget=atapi.StringWidget(
-            label="Columns to display for the right table",
-            description="Name the columns that should be used to display the records in the unser interface.",
-            label_msgid='PloneDBTableEdit_label_right_table_display_cols',
-            description_msgid='PloneDBTableEdit_help_right_table_display_cols',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='rightForeignKey',
-        widget=atapi.StringWidget(
-            label="Right foreign key",
-            description="Name the column of this table that contains the foreign key to the right table",
-            label_msgid='PloneDBTableEdit_label_rightForeignKey',
-            description_msgid='PloneDBTableEdit_help_rightForeignKey',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-    atapi.StringField(
-        name='right_table_sorting_col',
-        widget=atapi.StringWidget(
-            label="Right table sorting column",
-            description="If you want sortable support for this table, specify a numeric column from this table which will be used for storing the order",
-            label_msgid='PloneDBTableEdit_label_right_table_sorting_col',
-            description_msgid='PloneDBTableEdit_help_right_table_sorting_col',
-            i18n_domain='PloneDBTableEdit',
-        ),
-        schemata="config DB"
-    ),
-
-
-))
 
 # Set storage on fields copied from ATContentTypeSchema, making sure
 # they work well with the python bridge properties.
@@ -303,6 +56,54 @@ class DBTable(base.ATCTContent):
             conn['right'] = sa.Table(self.getRight_table(), meta, autoload=True)
         return conn
         
+    def getColumnsOfTable(self, tablename):
+        """ returns the column headers of the given table 
+        """
+        C = self._get_conn()
+        if tablename not in ['main', 'left', 'right']:
+            return 
+        table = C.get(tablename, None)
+        if table is None:
+            return None
+        return table.c
+        
+    @instance.memoize
+    def getColWidths(self):
+        """ determine practical sizes to edit the columns based on what data already is in them
+        """
+        results = self.selectFromTable()
+        cols = self.getColumnsOfTable('main')
+        lens = {}
+        for line in results:
+            for c in cols:
+                val = line[c]
+                if type(val) == UnicodeType:
+                    L = len(val.encode('utf-8'))
+                elif type(val) in [IntType, FloatType]:
+                    L = len(str(val))
+                else:
+                    try: 
+                        L = len(str(val))
+                    except: 
+                        L = 10
+                        
+                lens[c.name] = max(lens.get(c.name, 0), L)
+                
+        # find proper defaults, this could be a very evaluated statistical approach ;)
+        def finddefault(num):
+            if num<5: 
+                return 5
+            elif num>40:
+                return 40
+            else:
+                return num
+                
+        for c in cols:
+            lens[c.name] = finddefault(lens.get(c.name, 10))
+            
+        return lens                 
+                                
+        
     security.declareProtected('Modify portal content','selectFromTable')
     def selectFromTable(self, order=''):
         """
@@ -313,11 +114,29 @@ class DBTable(base.ATCTContent):
         maintable = C['main']
         sortcolumn = getattr(maintable.c, self.getSortByColumn())
 
-        statement = sa.sql.select([maintable])
-        statement = statement.order_by(sortcolumn) 
-
-        results = conn.execute(statement).fetchall() 
         
+        # check if we should filter...
+        request = self.REQUEST
+        WC = []
+        if not request.get('form.button.RemoveFilter', None):
+            for elem in request.keys():
+                if elem.startswith('filter_') and request.get(elem,'') != '':
+                    fieldname = elem.replace('filter_', '')
+                    value = "%s%%" % request.get(elem,'')
+                    WC.append(getattr(maintable.c, fieldname).like(value))
+
+        if WC:
+            cond = WC[0]
+            for C in WC[1:]:
+                cond = cond & C
+            statement = maintable.select(cond)
+            statement = statement.order_by(sortcolumn)             
+            results = conn.execute(statement).fetchall() 
+        else:
+            statement = sa.sql.select([maintable])
+            statement = statement.order_by(sortcolumn) 
+            results = conn.execute(statement).fetchall() 
+
         return results
 
     security.declareProtected('Modify portal content', 'insertIntoTable')
@@ -354,16 +173,14 @@ class DBTable(base.ATCTContent):
         maintable = C['main']
         pkey = getattr(maintable.c, self.getPrimaryKey())
 
-        IDS = self.REQUEST.get('IDS', [])
-
-        if type(IDS) == type(''):
-            IDS = [IDS]
-
-        delete = maintable.delete(pkey=IDS)
-        
+        IDS = self.REQUEST.get('IDS', '')
+        if type(IDS) == type([]):
+            ID = IDS[0]
+                      
+        delete = maintable.delete(pkey==ID)       
         result = conn.execute(delete)
         
-        return "The following records have been deleted: %s." % IDS
+        return "The following record has been deleted: %s." % ID
 
 
     security.declareProtected('Modify portal content','updateTable')
@@ -401,10 +218,13 @@ class DBTable(base.ATCTContent):
         pkey = getattr(maintable.c, self.getPrimaryKey())
         statement = sa.sql.select([sa.sql.func.max(pkey).label('maxkey')])
         result = conn.execute(statement)
-        maxkey = result.fetchone()['maxkey']+1
-        return maxkey
+        maxkey = result.fetchone()['maxkey']
+        if maxkey is None:
+            return 0
+        return maxkey+1
         
     security.declareProtected('Modify portal content','getForeignKeyList')
+    @instance.memoize
     def getForeignKeyList(self, column):
         """
         retrieves a value list as specified in the property configureForeignKeys to be used in the inplace editor
@@ -417,12 +237,15 @@ class DBTable(base.ATCTContent):
                 FL[elems[0].strip()] = elems[1]
         if column not in FL.keys():
             return None
-        SQL = "SELECT %s;" % FL[column]
-        C = getattr(self, self.getDBConnection())
-        results = C().query(SQL)
-        results = Results(results)
+            
+        C = self._get_conn()
+        conn = C['conn']
+        SQL = "SELECT %s" % FL[column]
+        statement = sa.sql.text(SQL)
+        result = conn.execute(statement)
+
         R = []
-        for i in results:
+        for i in result:
             R.append(i[0])
         R.sort()
         return R
@@ -471,25 +294,28 @@ class DBTable(base.ATCTContent):
         results = Results(results)
         return results
 
-    def ajaxUpdateCell(self, id, column, val):
+    def ajaxUpdateCell(self, id='', column='', value=None):
         """
         updates the given entry
         """
-        C = getattr(self, self.getDBConnection())
-        quote = C.sql_quote__
-        coldata = self.getColumnData()
-        #print column
-        if coldata[column]['type']=='s':
-            qval = quote(val)
-        if coldata[self.getPrimaryKey()]['type']=='s':
-            qid = quote(id)
-        else:
-            qid = id
+        if value is None:
+            return "Error: No value given. Nothing has changed."
+        if column == '':
+            return "Error: Invalid Column."
+        if id == '':
+            return "Error: Invalid Id."
+        
+        C = self._get_conn()
+        conn = C['conn']
+        maintable = C['main']
+        pkey = getattr(maintable.c, self.getPrimaryKey())
 
-        SQL = "UPDATE %s SET %s=%s WHERE %s=%s;" % (self.getTable(), column, qval, self.getPrimaryKey(), qid)
-        #print SQL
-        results = C().query(SQL)
-        return val
+        toset = {column: value}
+        upd = maintable.update(pkey==id, values=toset)
+        result = conn.execute(upd)
+
+        return value
+        
 
     def manage_insertNewLine(self, RESPONSE=None):
         """

@@ -10,5 +10,59 @@
         directory="images" 
         /> 
 
+    <browser:resource
+        name="dbtable-styledefs.css"
+        file="dbtable-styledefs.css"
+        />        
+
+    <browser:resource
+        name="dbtable.js"
+        file="dbtable.js"
+        />        
+        
+    <browser:page
+      for="..interfaces.IDBTable"
+      name="view"
+      class=".dbtable.DBTableView"
+      permission="zope2.View"
+      />
+      
+    <browser:menuItem
+        for="..interfaces.IDBTable"
+        menu="plone_displayviews"
+        title="DBTable view"
+        action="@@view"
+        description="Default representation of a DBTable"
+        />      
+
+    <browser:page
+      for="..interfaces.IDBTable"
+      name="enter"
+      class=".dbtable.DBTableEditView"
+      permission="cmf.ModifyPortalContent"
+      />
+      
+    <browser:menuItem
+        for="..interfaces.IDBTable"
+        menu="plone_displayviews"
+        title="DBTable enter"
+        action="@@enter"
+        description="Enter Data into a DBTable"
+        />      
+
+    <browser:page
+      for="..interfaces.IDBTable"
+      name="addrow"
+      class=".dbtable.DBTableAddRow"
+      permission="cmf.ModifyPortalContent"
+      />
+
+    <browser:page
+      for="..interfaces.IDBTable"
+      name="delrow"
+      class=".dbtable.DBTableDeleteRow"
+      permission="cmf.ModifyPortalContent"
+      />
+
 
 </configure>

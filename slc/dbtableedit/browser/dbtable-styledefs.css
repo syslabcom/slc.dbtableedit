@@ -1,0 +1,22 @@
+ .selecttable {
+}
+.selecttable tr th {
+	BACKGROUND: #edf2f2;
+	text-align:left;
+    padding: 5px 10px 5px 3px;
+    BORDER-BOTTOM: #ddd 2px solid;
+    BORDER-RIGHT: #ddd 2px solid;
+    BORDER-TOP: #fff 2px solid;
+}
+.selecttable tr td {
+	BACKGROUND: #edf2f2;
+    padding: 3px 3px 3px 3px;
+    BORDER-BOTTOM: #ddd 1px solid;
+    BORDER-RIGHT: #ddd 1px solid;
+    BORDER-TOP: #fff 1px solid;
+}
+.neutral {
+	BACKGROUND: white !important;
+    border: 0px !important;
+}
+    

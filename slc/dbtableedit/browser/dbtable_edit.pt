@@ -1,0 +1,224 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal" 
+      xmlns:metal="http://xml.zope.org/namespaces/metal" 
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n" 
+      xml:lang="en"
+      lang="en"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="slc.dbtableedit">
+
+
+
+<body>
+<metal:css fill-slot="css_slot">
+    <style type="text/css" media="all"
+           tal:content="string:@import url($portal_url/++resource++dbtable-styledefs.css);"></style>
+</metal:css>
+<metal:javascript_head fill-slot="javascript_head_slot">
+    <!--script src="jquery.js" type="text/javascript"></script-->
+    <script type="text/javascript"
+            tal:attributes="src string:$portal_url/++resource++dbtable.js"></script>
+</metal:javascript_head>
+
+<div metal:fill-slot="main"
+     tal:define="Batch python:modules['Products.CMFPlone'].Batch;
+                 b_size here/getDefault_batch_size ;b_start python:0;b_start request/b_start | b_start;
+        ">
+
+        <div tal:replace="structure provider:plone.abovecontenttitle" />
+
+        <h1 class="documentFirstHeading">
+            <span metal:use-macro="python:context.widget('title', mode='view')" />
+        </h1>
+
+        <div tal:replace="structure provider:plone.belowcontenttitle" />
+
+        <div class="documentDescription">
+            <span metal:use-macro="python:context.widget('description', mode='view')" />
+        </div>
+        
+
+    <div class="field ArchetypesStringWidget"
+         id="archetypes-fieldname-table_edit">
+          <label for="table_edit">Edit the Table</label>
+
+          <div class="formHelp" id="table_edit_help">
+            Edit each cell by clicking on it. You can add new lines by filling the form fields at the end of the table. Click on the red cross to delete a line.
+          </div>
+
+        <div tal:define="results here/selectFromTable;
+                         colwidths here/getColWidths;
+                         batch python:Batch(results, b_size, int(b_start), orphan=1);
+                         columns python:here.getColumnsOfTable('main');
+                         showPK here/getShowPrimaryKey;
+                         pkey here/getPrimaryKey;
+                       ">
+
+        <div metal:use-macro="here/batch_macros/macros/navigation" />
+
+    <div id="tablescroller" style="overflow: auto;">
+    <table class="selecttable">
+
+        <!-- Filter search fields -->
+        <form name="edit_form"
+            method="post"
+            enctype="multipart/form-data"
+            action=""
+            tal:define="mode string:edit"
+            tal:attributes="action python:here.absolute_url()+'/@@enter'">
+            
+        <tr>
+            <td colspan="2">
+                <input class="context"
+                   tabindex=""
+                   type="submit"
+                   name="form.button.Filter"
+                   value="Filter"
+                   tal:attributes="tabindex tabindex/next;"
+                   />
+                <input class="context"
+                   tabindex=""
+                   type="submit"
+                   name="form.button.RemoveFilter"
+                   value="Remove Filter"
+                   tal:attributes="tabindex tabindex/next;"
+                   />
+            </td>
+        </tr>
+        <tr>
+            <span tal:repeat="H columns">
+              <td tal:define="showme python:not(not showPK and H.name==pkey);
+                              FKL python:here.getForeignKeyList(H.name)"
+                  tal:condition="showme">
+                  <span tal:condition="not:FKL">
+                    <input type="text" tal:condition="python:not request.get('form.button.RemoveFilter')"
+                           tal:attributes="name string:filter_${H/name};
+                                           tabindex tabindex/next;
+                                           size python:colwidths[H.name];
+                                           value python:request.get('filter_%s' % H.name, '')">
+                    <input type="text" tal:condition="python:request.get('form.button.RemoveFilter')"
+                           tal:attributes="name string:filter_${H/name};
+                                           tabindex tabindex/next;
+                                           size python:colwidths[H.name];
+                                           ">
+                  </span>
+                  <span tal:condition="FKL">
+                      <select tal:attributes="name string:filter_${H/name};tabindex tabindex/next;">
+                        <option value=""></option>
+                        <option tal:repeat="K FKL" tal:content="K" tal:attributes="value K"></option>
+                      </select>
+                  </span>
+              </td>
+
+
+
+            </span>
+
+        </tr>
+       </form>
+
+
+
+
+        <tr>
+            <span tal:omit-tag="" tal:repeat="H columns">
+                <th tal:content="python:'%s' %(H.name.capitalize())"
+                    tal:condition="python:not(not showPK and H.name==pkey)">
+                    Headers
+                </th>
+            </span>
+            <th class="neutral">
+            </th>
+        </tr>
+
+        <tr tal:repeat="line batch">
+          <tal:block define="odd repeat/line/odd;">
+
+            <tal:repeat repeat="C columns/keys">
+            <td tal:define="currid python:line[pkey];"
+                tal:condition="python:not(not showPK and C==pkey)">
+                <div id="editme"
+                      tal:content="structure python:line[C] or '&nbsp;'"
+                      tal:define="cw python:colwidths[C]/1.5"
+                      tal:attributes="id python:'edit_%s_%s'%(currid, C);
+                                      style python:line[C] and '' or 'border: 1px dashed grey;;width:%sem;;'%cw">
+                                      Value
+                </div>
+                <span tal:replace="structure python:view.make_inplace_editor(id=currid, col=C, fkl=here.getForeignKeyList(C))"/>
+            </td>
+            </tal:repeat>
+
+            <td class="neutral">
+                <a href="dbtableedit"
+                   tal:attributes="href python:'%s/delrow?IDS:list=%s' %(here.absolute_url(), str(line[pkey]))">
+                    <img src="++resource++slc.dbtableedit.images/delete_icon.gif">
+                </a>
+            </td>
+          </tal:block>
+        </tr>
+
+
+        <form name="edit_form"
+            method="post"
+            enctype="multipart/form-data"
+            action=""
+            tal:define="mode string:edit"
+            tal:attributes="action python:here.absolute_url()+'/addrow'">
+
+        <tr>
+            <span tal:repeat="C columns/keys">
+
+              <td tal:define="showme python:not(not showPK and C==pkey);
+                              FKL python:here.getForeignKeyList(C)"
+                  tal:condition="showme">
+                  <b><span tal:content="python:C.capitalize()"/></b><br>
+                  <span tal:condition="not:FKL">
+                    <input type="text"
+                           tal:attributes="name string:db_${C};
+                                           tabindex tabindex/next;
+                                           value python:here.getAutoIncrementPrimaryKey() and C==pkey and here.getNextPKValue() or '';
+                                           size python:colwidths[C]">
+                  </span>
+                  <span tal:condition="FKL">
+                      <select tal:attributes="name string:db_${C};tabindex tabindex/next;">
+                        <option value=""></option>
+                        <option tal:repeat="K FKL" tal:content="K" tal:attributes="value K"></option>
+                      </select>
+                  </span>
+              </td>
+
+
+                      <input type="hidden"
+                             tal:condition="python:not showPK and C==pkey"
+                             tal:attributes="name string:db_${C};
+                                             tabindex tabindex/next;
+                                             value python:here.getAutoIncrementPrimaryKey() and here.getNextPKValue() or ''">
+
+            </span>
+            <td class="neutral">
+                <input
+                   tabindex=""
+                   type="submit"
+                   name="form.button.Add"
+                   value="Add "
+                   tal:attributes="tabindex tabindex/next;"
+                   />
+            </td>
+        </tr>
+       </form>
+
+    </table>
+    </div>
+
+  </div>
+</div>
+
+
+
+
+
+
+</div>
+
+</body>
+</html>
