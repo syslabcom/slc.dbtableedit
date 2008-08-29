@@ -108,7 +108,7 @@
 
 
     <div class="lefttable_box">
-        <h2 class="listheading">Left Table (Lists)</h2>
+        <h2 class="listheading" tal:content="python:here.getLeft_table().capitalize().replace('_', ' ')">Left Table</h2>
     
         <ul class="lefttable"> 
         <tal:repeat repeat="line view/lefttable">
@@ -125,13 +125,13 @@
     <div class="visualClear"></div>
 
     <div id="wastebin">
-        <img src="++resource++slc.dbtableedit.images/trash.gif">
+        <img src="++resource++slc.dbtableedit.images/legend_delete.gif"><img src="++resource++slc.dbtableedit.images/trash.gif">
     </div>
 
     <div class="visualClear"></div>
 
     <div class="righttable_box">
-        <h2 class="listheading">Right Table (Members)</h2>
+        <h2 class="listheading" tal:content="python:here.getRight_table().capitalize().replace('_', ' ')">Right Table</h2>
         <ul class="righttable"> 
         <tal:repeat repeat="line view/righttable">
             <li class="righttable_entry assignform_item" 
@@ -144,7 +144,7 @@
 
 
     <div class="maintable_box" >
-        <h2 class="listheading">Mappingtable (Listmembers)</h2>
+        <h2 class="listheading" tal:content="python:here.getTable().capitalize().replace('_', ' ')">Maintable</h2>
         <ul class="maintable"> 
 
         </ul>
