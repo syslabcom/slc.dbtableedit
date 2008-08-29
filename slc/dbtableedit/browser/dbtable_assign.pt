@@ -1,0 +1,168 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"
+      xmlns:tal="http://xml.zope.org/namespaces/tal" 
+      xmlns:metal="http://xml.zope.org/namespaces/metal" 
+      xmlns:i18n="http://xml.zope.org/namespaces/i18n" 
+      xml:lang="en"
+      lang="en"
+      metal:use-macro="context/main_template/macros/master"
+      i18n:domain="slc.dbtableedit">
+
+
+
+<body>
+<metal:css fill-slot="css_slot">
+    <style type="text/css" media="all"
+           tal:content="string:@import url($portal_url/++resource++dbtable-styledefs.css);"></style>
+
+<style type="text/css" media="all">
+</style>
+
+</metal:css>
+<metal:javascript_head fill-slot="javascript_head_slot">
+    <script type="text/javascript"
+            tal:attributes="src string:$portal_url/++resource++dbtable-jquery.js"></script>
+    <script type="text/javascript"
+            tal:attributes="src string:$portal_url/++resource++dbtable-jqueryui.js"></script>
+    <script type="text/javascript"
+            tal:attributes="src string:$portal_url/++resource++dbtable.js"></script>
+
+
+<script type="text/javascript" tal:content="python:'var current_url = \'%s\';' % here.absolute_url()"></script>   
+<script type="text/javascript">   
+  var fkey;
+
+  function load_maintable() {
+    $.get(current_url+'/maintable?fkey='+fkey, 
+          function(data) {
+            $('.maintable').html(data);
+          }
+   )}
+   function add_new_entry(id) {
+     $.get(current_url+'/addEntryToList?id='+id+'&list_id='+fkey,
+           function(data){
+                $('.maintable').html(data);
+            })
+   } 
+   function remove_entry(id) {
+     $.get(current_url+'/removeEntryFromList?id='+id+'&list_id='+fkey,
+           function(data){
+                $('.maintable').html(data);
+            })
+   } 
+   function update_sorting(data) {
+     $.get(current_url+'/update_sorting?list_id='+fkey+'&'+data,
+           function(data){
+                $('.maintable').html(data);
+            })
+   }
+           
+  $(document).ready(function(){
+    $(".righttable_entry").draggable({helper: 'clone'});
+
+    $("#wastebin").droppable({
+        accept: ".maintable_entry",
+    	activeClass: 'droppable-active',
+    	hoverClass: 'droppable-hover',
+    	drop: function(ev, ui) {
+    		remove_entry(ui.draggable.attr("id"));
+    	}
+    });
+    $(".maintable").droppable({
+    	accept: ".righttable_entry",
+    	activeClass: 'droppable-active',
+    	hoverClass: 'droppable-hover',
+    	drop: function(ev, ui) {
+    		$(this).append(ui.draggable);
+    		add_new_entry(ui.draggable.attr("id"));
+    	}
+    });
+    $(".maintable").sortable({update: function(){ update_sorting($(this).sortable('serialize')); } });
+  });
+</script>            
+</metal:javascript_head>
+
+<div metal:fill-slot="main"
+     tal:define="Batch python:modules['Products.CMFPlone'].Batch;
+                 b_size here/getDefault_batch_size ;b_start python:0;b_start request/b_start | b_start;">
+
+        <div tal:replace="structure provider:plone.abovecontenttitle" />
+
+        <h1 class="documentFirstHeading">
+            <span metal:use-macro="python:context.widget('title', mode='view')" />
+        </h1>
+
+        <div tal:replace="structure provider:plone.belowcontenttitle" />
+
+        <div class="documentDescription">
+            <span metal:use-macro="python:context.widget('description', mode='view')" />
+        </div>
+        
+
+    <div class="field">
+          <label for="table_assign">Assign</label>
+
+          <div class="formHelp" id="table_edit_help">
+            Edit each cell by clicking on it. You can add new lines by filling the form fields at the end of the table. Click on the red cross to delete a line.
+          </div>
+
+
+
+    <div class="lefttable_box">
+        <h2 class="listheading">Left Table (Lists)</h2>
+    
+        <ul class="lefttable"> 
+        <tal:repeat repeat="line view/lefttable">
+            <li class="lefttable_entry" 
+                tal:define="entry_id python:line[here.getLeft_table_pkey()]"
+                tal:attributes="id string:left_${entry_id}"
+                tal:content="python:here.display_line(line)" ></li>    
+            <script tal:define="entry_id python:line[here.getLeft_table_pkey()]"
+                    tal:content="python:here.make_lefttable_clickevent(entry_id)"></script>
+        </tal:repeat>
+        </ul>
+    </div>
+
+    <div class="visualClear"></div>
+
+    <div id="wastebin">
+        <img src="++resource++slc.dbtableedit.images/trash.gif">
+    </div>
+
+    <div class="visualClear"></div>
+
+    <div class="righttable_box">
+        <h2 class="listheading">Right Table (Members)</h2>
+        <ul class="righttable"> 
+        <tal:repeat repeat="line view/righttable">
+            <li class="righttable_entry assignform_item" 
+                tal:define="entry_id python:line[here.getRight_table_pkey()]"
+                tal:attributes="id string:right_${entry_id}"
+                tal:content="python:here.display_line(line)" ></li>    
+        </tal:repeat>
+        </ul>
+    </div>
+
+
+    <div class="maintable_box" >
+        <h2 class="listheading">Mappingtable (Listmembers)</h2>
+        <ul class="maintable"> 
+
+        </ul>
+
+    </div>
+    
+
+
+
+
+    <div class="visualClear"></div>
+
+
+
+
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -315,28 +315,24 @@ class DBTable(base.ATCTContent):
         result = conn.execute(upd)
 
         return value
-        
+#        
+#    def getColumnData(self):
+#        """
+#        retrieves the data of the columns to know when to quote
+#        """
+#        C = getattr(self, self.getDBConnection())
+#        SQL = "SELECT * FROM %s LIMIT 1;" % (self.getTable())
+#        results = C().query(SQL)
+#        results = Results(results)
+#        names = results.names()
+#        data = results.data_dictionary()
+#        #print data
+#        return data.copy()
 
-    def manage_insertNewLine(self, RESPONSE=None):
-        """
-        inserts and redirects
-        """
-        #print "in manage insert new line!"
-        self.insertIntoTable()
-        RESPONSE.redirect('edit')
 
-    def getColumnData(self):
-        """
-        retrieves the data of the columns to know when to quote
-        """
-        C = getattr(self, self.getDBConnection())
-        SQL = "SELECT * FROM %s LIMIT 1;" % (self.getTable())
-        results = C().query(SQL)
-        results = Results(results)
-        names = results.names()
-        data = results.data_dictionary()
-        #print data
-        return data.copy()
+
+
+
 
     def fetchRightTableEntries(self):
         """ fetches the entries of the right table of an n-m table
@@ -345,6 +341,12 @@ class DBTable(base.ATCTContent):
                                       self.getRight_table_pkey(),
                                       self.getRight_table_display_cols()
                                      )
+
+    def fetchLeftTableEntries(self):
+        """ fetches the entries of the left table of an n-m table
+        """
+        return self.fetchTableEntries(self.getLeft_table(), self.getLeft_table_pkey(), self.getLeft_table_display_cols())
+
 
     def fetchTableEntries(self, table, pkey, cols):
         """ fetches the entries of s table of an n-m table
@@ -361,10 +363,6 @@ class DBTable(base.ATCTContent):
         results = Results(results)
         return results, cols
 
-    def fetchLeftTableEntries(self):
-        """ fetches the entries of the left table of an n-m table
-        """
-        return self.fetchTableEntries(self.getLeft_table(), self.getLeft_table_pkey(), self.getLeft_table_display_cols())
 
     def removeListItem(self, elemid, list):
         """ removes an item from the list when dropped on the wastebin """
@@ -376,24 +374,7 @@ class DBTable(base.ATCTContent):
         return results
 
 
-    def addToListItems(self, id, list):
-        """ add something to the list """
-        id = id.split("_")[-1]
-        list = list.replace('list_', '')
-        SQL = """INSERT INTO %s (%s, %s, %s) VALUES (max(%s.%s)+1, %s, %s)""" % \
-                (self.getTable(),
-                 self.getPrimaryKey(),
-                 self.getLeftForeignKey(),
-                 self.getRightForeignKey(),
-                 self.getTable(),
-                 self.getPrimaryKey(),
-                 list,
-                 id)
-        #print SQL
-        C = getattr(self, self.getDBConnection())
-        results = C().query(SQL)
-        results = self.getRightTableEntriesByLeftId(list)
-        return results
+
 
     def makeListItems(self, results, listid):
         """ Helpermethod for ajax: Takes a resultset and build a list item list from it """
@@ -424,26 +405,7 @@ class DBTable(base.ATCTContent):
 
         return LI
 
-    def sortRightTableEntriesByLeftId(self, id, order):
-        """
-        Selects all entries from the joint table where left table id is 'id'
-        """
-        C = getattr(self, self.getDBConnection())
-        conn = C()
-        print order
-        print id
-        thistab = self.getTable()
-        sortcol = self.getRight_table_sorting_col()
-        fkey = self.getRightForeignKey()
-        elems = order.split("&")
-        SQLS = []
-        for i in range(len(elems)):
-            elem = elems[i]
-            k,v = elem.split('=')
-            SQL = "UPDATE %s SET %s=%s WHERE %s=%s" % (thistab, sortcol, i, fkey, v)
-            SQLS.append(SQL)
-            #print SQL
-        results = conn.query(";".join(SQLS))
+
 
 
 
@@ -494,5 +456,127 @@ class DBTable(base.ATCTContent):
         results = self.makeListItems(results, id)
         return results
 
+
+    def make_lefttable_clickevent(self, entry_id):
+        """ generate the javascript code for the click event of a left table entry """
+        jstmpl = """$('#left_%s').click( function(){ fkey = %s; load_maintable();  });""" % (entry_id, entry_id)
+        return jstmpl        
+
+    def maintable(self, fkey):
+        """ Load the data from the mapping (main) table """
+        context = self
+        C = context._get_conn()
+        conn = C['conn']
+        main = C['main']
+        right = C['right']
+        
+        displaycols = [x.strip() for x in context.getRight_table_display_cols().split(',')]
+        
+        pkey_col = getattr(main.c, context.getPrimaryKey())
+        left_fkey_col = getattr(main.c, context.getLeftForeignKey())
+        right_fkey_col = getattr(main.c, context.getRightForeignKey())
+        order_col = getattr(main.c, context.getRight_table_sorting_col())
+        right_id_col = getattr(right.c, context.getRight_table_pkey())
+        
+        cols = [pkey_col]
+        for name in displaycols:
+            cols.append(getattr(right.c, name))
+            
+
+        from_obj = main.join(right, right_id_col==right_fkey_col)
+        query = sa.sql.select(cols, from_obj=[from_obj])
+        query = query.where(left_fkey_col==fkey)
+        query = query.order_by(order_col)            
+        
+        results = conn.execute(query)
+        html = []
+        for line in results:
+            html.append("""<li class="maintable_entry" id="main_%s">%s</li>""" % (line[right_id_col], self.display_line(line)))   
+        return "\n".join(html)
+
+
+    def display_line(self, line):
+        """ prepares a result line for display """
+        out = []
+        for x in line:
+            if x is None: 
+                continue
+            if type(x) in [IntType, FloatType]:
+                x = str(x)
+            elif type(x) == UnicodeType:
+                x = x.encode('utf-8')
+
+            if x.strip()=='':
+                continue
+            out.append(x.strip())
+            
+        return ", ".join(out)   
+
+
+    def addEntryToList(self, id, list_id):
+        """ add something to the list """
+        id = int(id.split("_")[-1].strip())
+        list_id = int(list_id)
+
+        context = self
+        C = context._get_conn()
+        conn = C['conn']
+        main = C['main']
+
+
+        pkey_col = getattr(main.c, context.getPrimaryKey())
+        left_fkey_col = getattr(main.c, context.getLeftForeignKey())
+        right_fkey_col = getattr(main.c, context.getRightForeignKey())
+        order_col = getattr(main.c, context.getRight_table_sorting_col())
+        #max_pkey = conn.execute(sa.select(sa.sql.func.max(pkey_col))).fetchone()
+        max_pkey = conn.execute( sa.select([sa.sql.func.max(pkey_col).label('maxid')] ) ).scalar()+1
+
+        toset = {
+                 pkey_col.name : max_pkey,
+                 left_fkey_col.name: list_id,
+                 right_fkey_col.name: id
+                }
+        ins = main.insert(values=toset)
+        result = conn.execute(ins)
+        id = result.last_inserted_ids()
+        return self.maintable(list_id)
+
+    def removeEntryFromList(self, id, list_id):
+        """ remove something from the list """
+        id = int(id.split("_")[-1].strip())
+        list_id = int(list_id)
+
+        context = self
+        C = context._get_conn()
+        conn = C['conn']
+        main = C['main']
+
+
+        pkey_col = getattr(main.c, context.getPrimaryKey())
+
+        dele = main.delete(pkey_col==id)
+        result = conn.execute(dele)
+        return self.maintable(list_id)
+
+
+    def update_sorting(self, list_id):
+        """
+        Selects all entries from the joint table where left table id is 'id'
+        """
+        C = self._get_conn()
+        conn = C['conn']
+        main = C['main']
+
+        order = self.REQUEST.get('main[]', [])
+
+        sortcol = getattr(main.c, self.getRight_table_sorting_col())
+        fkey = getattr(main.c, self.getRightForeignKey())
+        pkey = getattr(main.c, self.getPrimaryKey())
+
+        query = main.update(pkey==sa.sql.bindparam('pkey'), values={sortcol.name: sa.sql.bindparam('counter')})
+        for counter in range(len(order)):
+            conn.execute(query, pkey=order[counter], counter=counter)
+            
+        return self.maintable(list_id)
 
 atapi.registerType(DBTable, PROJECTNAME)

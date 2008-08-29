@@ -20,3 +20,57 @@
     border: 0px !important;
 }
     
+.highlighted { background: yellow;}    
+
+.lefttable li, .maintable li, .righttable li {
+background-color:#DDDDDD;
+border-color:#EEEEEE #AAAAAA #AAAAAA #EEEEEE;
+border-style:solid;
+border-width:1px;
+cursor:pointer;
+margin:2px 0;
+padding:5px;
+}
+
+.lefttable_entry {
+    cursor:pointer;
+}
+
+.lefttable {
+height: 200px;
+overflow: auto;
+}
+
+.righttable, .maintable {
+height: 300px;
+overflow: auto;
+}
+
+.righttable_box, .maintable_box {
+    float:left; 
+    width: 49%;
+}
+
+.maintable_box {
+    margin-left: 1%;
+}
+.lefttable_box ul, .righttable_box ul, .maintable_box ul{
+list-style-type:none;
+list-style-image:none;
+margin-left: 0;
+}
+
+.maintable_entry {
+z-index: 100;
+}
+
+.droppable-active {
+	opacity: 1.0;
+}
+.droppable-hover {
+	outline: 2px dotted black;
+}
+#wastebin {
+    padding: 10px;
+    float:right;
+}

@@ -50,7 +50,9 @@
 			}  
 			
 		   	obj.html(items);	
-		   	obj.unbind();		
+		   	//obj.unbind('blur');		
+		   	//obj.unbind('change');		
+		   	obj.unbind('click');		
 			jq("#" + namex).focus().select();			
 			jq("#btnSave" + this.id, obj).click(function () {
 				jq.ajax({
@@ -72,7 +74,7 @@
 					error: function(XMLHttpRequest, textStatus, errorThrown) {
 						obj.html(textStatus + " - " + errorThrown);
 					}
-		  		});				
+		  		});
 			})				
 			
 			jq("#btnCancel" + this.id, obj).click(
@@ -82,7 +84,7 @@
 			    }
 			)
 				
-			return false;
+			//return false;
 		});		  
     });			
  };

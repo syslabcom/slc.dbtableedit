@@ -19,6 +19,15 @@
         name="dbtable.js"
         file="dbtable.js"
         />        
+
+    <browser:resource
+        name="dbtable-jqueryui.js"
+        file="dbtable-jqueryui.js"
+        />        
+    <browser:resource
+        name="dbtable-jquery.js"
+        file="dbtable-jquery.js"
+        />        
         
     <browser:page
       for="..interfaces.IDBTable"
@@ -41,6 +50,14 @@
       class=".dbtable.DBTableEditView"
       permission="cmf.ModifyPortalContent"
       />
+
+    <browser:page
+      for="..interfaces.IDBTable"
+      name="assign"
+      class=".dbtable.DBTableAssignView"
+      permission="cmf.ModifyPortalContent"
+      />
+
       
     <browser:menuItem
         for="..interfaces.IDBTable"
@@ -63,6 +80,7 @@
       class=".dbtable.DBTableDeleteRow"
       permission="cmf.ModifyPortalContent"
       />
+
 
 
 </configure>
