@@ -54,6 +54,7 @@ DBTableSchema = schemata.ATContentTypeSchema.copy() + atapi.Schema((
             description_msgid='PloneDBTableEdit_help_sortByColumn',
             i18n_domain='PloneDBTableEdit',
         ),
+        required=True,
         schemata="Database"
     ),
 
