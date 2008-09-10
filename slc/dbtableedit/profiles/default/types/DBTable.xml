@@ -29,4 +29,14 @@
     url_expr="string:${object_url}/edit" visible="True">
     <permission value="Modify portal content" />
   </action>
+  <action title="Enter Values" action_id="enter" category="object" 
+    condition_expr="python:object.getIs_nm_table() == False"
+    url_expr="string:${object_url}/enter" visible="True">
+    <permission value="Modify portal content" />
+  </action>
+  <action title="Assign Values" action_id="assign" category="object" 
+    condition_expr="python:object.getIs_nm_table() == True"
+    url_expr="string:${object_url}/assign" visible="True">
+    <permission value="Modify portal content" />
+  </action>
 </object>
