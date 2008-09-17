@@ -94,12 +94,12 @@
                     <input type="text" tal:condition="python:not request.get('form.button.RemoveFilter')"
                            tal:attributes="name string:filter_${H/name};
                                            tabindex tabindex/next;
-                                           size python:colwidths[H.name];
+                                           size python:colwidths.get(H.name, 20);
                                            value python:request.get('filter_%s' % H.name, '')">
                     <input type="text" tal:condition="python:request.get('form.button.RemoveFilter')"
                            tal:attributes="name string:filter_${H/name};
                                            tabindex tabindex/next;
-                                           size python:colwidths[H.name];
+                                           size python:colwidths.get(H.name, 20);
                                            ">
                   </span>
                   <span tal:condition="FKL">
