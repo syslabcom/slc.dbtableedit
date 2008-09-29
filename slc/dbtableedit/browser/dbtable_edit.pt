@@ -141,7 +141,7 @@
                 tal:condition="python:not(not showPK and C==pkey)">
                 <div id="editme"
                       tal:content="structure python:line[C] or '&nbsp;'"
-                      tal:define="cw python:colwidths[C]/1.5"
+                      tal:define="cw python:colwidths.get(C, 20)/1.5"
                       tal:attributes="id python:'edit_%s_%s'%(currid, C);
                                       style python:line[C] and '' or 'border: 1px dashed grey;;width:%sem;;'%cw">
                                       Value
@@ -179,7 +179,7 @@
                            tal:attributes="name string:db_${C};
                                            tabindex tabindex/next;
                                            value python:here.getAutoIncrementPrimaryKey() and C==pkey and here.getNextPKValue() or '';
-                                           size python:colwidths[C]">
+                                           size python:colwidths.get(C, 20)">
                   </span>
                   <span tal:condition="FKL">
                       <select tal:attributes="name string:db_${C};tabindex tabindex/next;">
