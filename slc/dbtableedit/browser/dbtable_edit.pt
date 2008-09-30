@@ -22,7 +22,10 @@
 
 <div metal:fill-slot="main"
      tal:define="Batch python:modules['Products.CMFPlone'].Batch;
-                 b_size here/getDefault_batch_size ;b_start python:0;b_start request/b_start | b_start;
+                 b_size request/b_size | here/getDefault_batch_size ;
+                 b_size python: int(b_size);
+                 b_start python:0;
+                 b_start request/b_start | b_start;
         ">
 
         <div tal:replace="structure provider:plone.abovecontenttitle" />
@@ -83,6 +86,13 @@
                    value="Remove Filter"
                    tal:attributes="tabindex tabindex/next;"
                    />
+                 <input type="text"
+                    tabindex=""
+                    type="text"
+                    size="5"
+                    name="b_size"
+                    tal:attributes="value request/b_size | here/getDefault_batch_size"
+                    /> (batch size)
             </td>
         </tr>
         <tr>
