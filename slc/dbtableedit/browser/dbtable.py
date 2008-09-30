@@ -36,7 +36,7 @@ class DBTableEditView(BrowserView):
     def make_inplace_editor(self, id, col, fkl=None):
         """ generate the code for an in place editor """
         targeturl = "%s/ajaxUpdateCell" % self.context.absolute_url()
-        width = self.context.getColWidths()[col]
+        width = self.context.getColWidths().get(col, 20)
         typex = "text"
         fklstr = '[]'
         if fkl:
