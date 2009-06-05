@@ -1,0 +1,12 @@
+slc.dbtableedit Changelog
+=====================
+
+slc.dbtableedit 1.1 (2009-05-12)
+----------------------------
+
+- Packaged egg (pilz)
+
+slc.dbtableedit 1.0 (2008-03-31)
+----------------------------
+
+- Initial port
