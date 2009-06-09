@@ -1,5 +1,2 @@
 *.pyc
-*.temp
-PKG-INFO
-SOURCES
-
+*.egg-info
