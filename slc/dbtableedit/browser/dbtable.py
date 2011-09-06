@@ -27,7 +27,6 @@ class DBTableEditView(BrowserView):
     """
     
     template = ViewPageTemplateFile('dbtable_edit.pt')
-    template.id = '@@enter'
 
     def __call__(self):
         return self.template()
@@ -71,7 +70,6 @@ class DBTableAssignView(BrowserView):
     implements(IDBTableAssignView)
         
     template = ViewPageTemplateFile('dbtable_assign.pt')
-    template.id = '@@assign'
 
     def __call__(self):
         return self.template()
