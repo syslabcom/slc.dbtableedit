@@ -1,6 +1,6 @@
-(function(jq){
+(function(jQuery){
 	
- jq.fn.editable = function(options) { 	
+ jQuery.fn.editable = function(options) { 	
 	
 	var defaults = {  
     	typex: "text",		
@@ -13,11 +13,11 @@
 		width: "200px"
    };  
    
-   var options = jq.extend(defaults, options);  
+   var options = jQuery.extend(defaults, options);  
 
     return this.each(function() {
 		
-		var obj = jq(this);
+		var obj = jQuery(this);
 				
 		obj.addClass(options.style_class);		
 		
@@ -53,12 +53,12 @@
 		   	//obj.unbind('blur');		
 		   	//obj.unbind('change');		
 		   	obj.unbind('click');		
-			jq("#" + namex).focus().select();			
-			jq("#btnSave" + this.id, obj).click(function () {
-				jq.ajax({
+			jQuery("#" + namex).focus().select();			
+			jQuery("#btnSave" + this.id, obj).click(function () {
+				jQuery.ajax({
 				    type: "POST", 	
 				   	data:	    		 
-				   		{value: jq("#" + namex).val(),
+				   		{value: jQuery("#" + namex).val(),
 				   		 id: options.id,
 				   		 column: options.column
 				   		},
@@ -77,7 +77,7 @@
 		  		});
 			})				
 			
-			jq("#btnCancel" + this.id, obj).click(
+			jQuery("#btnCancel" + this.id, obj).click(
 			    function () {
 				    obj.html(text_saved);		
         			return false;

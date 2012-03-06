@@ -18,12 +18,7 @@
 </style>
 
 </metal:css>
-<metal:javascript_head fill-slot="javascript_head_slot">
-    <script type="text/javascript"
-            tal:attributes="src string:$portal_url/++resource++dbtable-jquery.js"></script>
-    <script type="text/javascript"
-            tal:attributes="src string:$portal_url/++resource++dbtable-jqueryui.js"></script>
-    <script type="text/javascript"
+<script type="text/javascript"
             tal:attributes="src string:$portal_url/++resource++dbtable.js"></script>
 
 
@@ -32,34 +27,34 @@
   var fkey;
 
   function load_maintable() {
-    $.get(current_url+'/maintable?fkey='+fkey, 
+    jQuery.get(current_url+'/maintable?fkey='+fkey, 
           function(data) {
-            $('.maintable').html(data);
+            jQuery('.maintable').html(data);
           }
    )}
    function add_new_entry(id) {
-     $.get(current_url+'/addEntryToList?id='+id+'&list_id='+fkey,
+     jQuery.get(current_url+'/addEntryToList?id='+id+'&list_id='+fkey,
            function(data){
-                $('.maintable').html(data);
+                jQuery('.maintable').html(data);
             })
    } 
    function remove_entry(id) {
-     $.get(current_url+'/removeEntryFromList?id='+id+'&list_id='+fkey,
+     jQuery.get(current_url+'/removeEntryFromList?id='+id+'&list_id='+fkey,
            function(data){
-                $('.maintable').html(data);
+                jQuery('.maintable').html(data);
             })
    } 
    function update_sorting(data) {
-     $.get(current_url+'/update_sorting?list_id='+fkey+'&'+data,
+     jQuery.get(current_url+'/update_sorting?list_id='+fkey+'&'+data,
            function(data){
-                $('.maintable').html(data);
+                jQuery('.maintable').html(data);
             })
    }
            
-  $(document).ready(function(){
-    $(".righttable_entry").draggable({helper: 'clone'});
+  jQuery(document).ready(function(){
+    jQuery(".righttable_entry").draggable({helper: 'clone'});
 
-    $("#wastebin").droppable({
+    jQuery("#wastebin").droppable({
         accept: ".maintable_entry",
     	activeClass: 'droppable-active',
     	hoverClass: 'droppable-hover',
@@ -67,19 +62,19 @@
     		remove_entry(ui.draggable.attr("id"));
     	}
     });
-    $(".maintable").droppable({
+    jQuery(".maintable").droppable({
     	accept: ".righttable_entry",
     	activeClass: 'droppable-active',
     	hoverClass: 'droppable-hover',
     	drop: function(ev, ui) {
-    		$(this).append(ui.draggable);
+    		jQuery(this).append(ui.draggable);
     		add_new_entry(ui.draggable.attr("id"));
     	}
     });
-    $(".maintable").sortable({update: function(){ update_sorting($(this).sortable('serialize')); } });
+    jQuery(".maintable").sortable({update: function(){ update_sorting(jQuery(this).sortable('serialize')); } });
   });
 </script>            
-</metal:javascript_head>
+
 
 <div metal:fill-slot="main"
      tal:define="Batch python:modules['Products.CMFPlone'].Batch;

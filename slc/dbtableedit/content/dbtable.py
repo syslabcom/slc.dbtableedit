@@ -459,7 +459,7 @@ class DBTable(base.ATCTContent):
 
     def make_lefttable_clickevent(self, entry_id):
         """ generate the javascript code for the click event of a left table entry """
-        jstmpl = """$('#left_%s').click( function(){ fkey = %s; load_maintable();  });""" % (entry_id, entry_id)
+        jstmpl = """jQuery('#left_%s').click( function(){ fkey = %s; load_maintable();  });""" % (entry_id, entry_id)
         return jstmpl        
 
     def maintable(self, fkey):
