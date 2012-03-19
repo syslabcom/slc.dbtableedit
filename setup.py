@@ -55,7 +55,6 @@ setup(name='slc.dbtableedit',
       zip_safe=False,
       install_requires=[
           'setuptools',    
-          'collective.lead>=1.0b3,<2.0dev'
           # -*- Extra requirements: -*-
       ],
       tests_require=tests_require,
