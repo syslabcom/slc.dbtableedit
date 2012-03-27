@@ -73,21 +73,16 @@
         <tr>
             <td colspan="2">
                 <input class="context"
-                   tabindex=""
                    type="submit"
                    name="form.button.Filter"
                    value="Filter"
-                   tal:attributes="tabindex tabindex/next;"
                    />
                 <input class="context"
-                   tabindex=""
                    type="submit"
                    name="form.button.RemoveFilter"
                    value="Remove Filter"
-                   tal:attributes="tabindex tabindex/next;"
                    />
                  <input type="text"
-                    tabindex=""
                     type="text"
                     size="5"
                     name="b_size"
@@ -103,17 +98,15 @@
                   <span tal:condition="not:FKL">
                     <input type="text" tal:condition="python:not request.get('form.button.RemoveFilter')"
                            tal:attributes="name string:filter_${H/name};
-                                           tabindex tabindex/next;
                                            size python:colwidths.get(H.name, 20);
                                            value python:request.get('filter_%s' % H.name, '')">
                     <input type="text" tal:condition="python:request.get('form.button.RemoveFilter')"
                            tal:attributes="name string:filter_${H/name};
-                                           tabindex tabindex/next;
                                            size python:colwidths.get(H.name, 20);
                                            ">
                   </span>
                   <span tal:condition="FKL">
-                      <select tal:attributes="name string:filter_${H/name};tabindex tabindex/next;">
+                      <select tal:attributes="name string:filter_${H/name}">
                         <option value=""></option>
                         <option tal:repeat="K FKL" tal:content="K" 
                                 tal:attributes="value K;
@@ -187,12 +180,11 @@
                   <span tal:condition="not:FKL">
                     <input type="text"
                            tal:attributes="name string:db_${C};
-                                           tabindex tabindex/next;
                                            value python:here.getAutoIncrementPrimaryKey() and C==pkey and here.getNextPKValue() or '';
                                            size python:colwidths.get(C, 20)">
                   </span>
                   <span tal:condition="FKL">
-                      <select tal:attributes="name string:db_${C};tabindex tabindex/next;">
+                      <select tal:attributes="name string:db_${C}">
                         <option value=""></option>
                         <option tal:repeat="K FKL" tal:content="K" tal:attributes="value K"></option>
                       </select>
@@ -203,17 +195,14 @@
                       <input type="hidden"
                              tal:condition="python:not showPK and C==pkey"
                              tal:attributes="name string:db_${C};
-                                             tabindex tabindex/next;
                                              value python:here.getAutoIncrementPrimaryKey() and here.getNextPKValue() or ''">
 
             </span>
             <td class="neutral">
                 <input
-                   tabindex=""
                    type="submit"
                    name="form.button.Add"
                    value="Add "
-                   tal:attributes="tabindex tabindex/next;"
                    />
             </td>
         </tr>
